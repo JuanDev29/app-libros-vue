@@ -1,9 +1,11 @@
 <template>
   <div class="row border py-1 my-1">
-    <div class="col-1">{{index+1}}</div>
-    <div class="col-4">{{book.nombre}}</div>
-    <div class="col-4">{{book.autor}}</div>
-    <div class="col-3"></div>
+    <div class="col-1 my-auto">{{index+1}}</div>
+    <div class="col-4 my-auto">{{book.nombre}}</div>
+    <div class="col-4 my-auto">{{book.autor}}</div>
+    <div class="col-3">
+      <div class="btn btn-danger btn-sm">Delete</div>
+    </div>
   </div>
 </template>
 

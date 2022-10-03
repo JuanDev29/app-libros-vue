@@ -54,7 +54,7 @@
 <script>
 import { initializeApp } from "firebase/app"
 import BookComponent from './components/BookComponent.vue'
-import { getFirestore, collection, getDocs, addDoc } from "firebase/firestore";
+import { getFirestore, collection, addDoc, onSnapshot } from "firebase/firestore";
 
 export default {
   name: 'App',
@@ -69,20 +69,19 @@ export default {
       bookAuthor: "",
       button: "fa fa-plus",
       deployAddBook: false,
-      update: false
+      update: false,
+      sus: ""
     }
   },
   methods: {
-    async loadBooks() {
-      const books = await getDocs(collection(this.db, "libros"));
-      books.forEach((book) => {
-        this.books.push({
-          id: book.id,
-          nombre: book.data().nombre,
-          autor: book.data().autor
+    loadBooks() {
+      onSnapshot(collection(this.db, "libros"), (querySnapshot) => {
+        const docs = []
+        querySnapshot.forEach(doc => {
+          docs.push({id: doc.id, ...doc.data()})
         })
-      });
-      console.log(this.books)
+        this.books = docs
+      })
     },
     handleDeployAddBook: function(event) {
       if(event.target.id === "agregar") {
@@ -98,12 +97,11 @@ export default {
     },
     handleBookForm(event) {
       if(event.target.id === "agregar") {
-        const dataBook = {          
+        const dataBook = {
           nombre: this.bookName,
           autor: this.bookAuthor
         }
-        console.log(dataBook)
-        this.addBook(dataBook)        
+        this.addBook(dataBook)
         this.bookName = ""
         this.bookAuthor = ""
         console.log(this.books)
@@ -113,13 +111,7 @@ export default {
       let nombre = book.nombre
       let autor = book.autor
       const librosCollection = collection(this.db, "libros")
-      const docRef = await addDoc(librosCollection, {
-        nombre, autor
-      })
-      console.log(docRef.id)
-      this.books.push({
-        id: docRef.id, nombre, autor
-      })
+      await addDoc(librosCollection, { nombre, autor })
     }
   },
   beforeMount() {
@@ -131,13 +123,9 @@ export default {
       messagingSenderId: "844111479312",
       appId: "1:844111479312:web:8f7e1b2614acc9d2490095"
     };
-    // Initialize Firebase
-    const app = initializeApp(firebaseConfig);
-    console.log(app)
-    this.db = getFirestore(app);
-    console.log(this.db)
-
+    const app = initializeApp(firebaseConfig); // Initialize Firebase
+    this.db = getFirestore(app); // Initialize Firestore
     this.loadBooks()
-  }
+  },
 }
 </script>
