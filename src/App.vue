@@ -10,11 +10,11 @@
           <div
             :class="['btn', 'btn-primary', button]"
             :id="'agregar'"
-            @click="handleDeployAddBook($event)"
+            @click="handleDeployForm($event)"
           ></div>
         </div>
       </div>
-      <div class="row border rounded bg-light py-3 my-2" v-if="deployAddBook">
+      <div class="row border rounded bg-light py-3 my-2" v-if="deployForm">
         <div class="col-md-5 col-sm-12 my-1">
           <input type="text" v-model="bookName" placeholder="Nombre Libro" style="width:80%">
         </div>
@@ -23,10 +23,16 @@
         </div>
         <div class="col-md-2 col-sm-12 my-auto">
           <div
-            id='agregar'
+            id='add'
             class="btn btn-info"
             @click="handleBookForm($event)"
           >Agregar</div>
+          <div
+            v-if='update'
+            id='update'
+            class="btn btn-secondary"
+            @click="handleBookForm($event)"
+          >Actualizar</div>
         </div>
       </div>
     </div>
@@ -43,8 +49,10 @@
         v-for="(book, index) in books"
         :key="index"
         :book="book"
-        :index="index"
         :id="book.id"
+        :index="index"
+        :db="this.db"
+        @handleUpdate="handleUpdate($event)"
       ></BookComponent>
     </div>
   </div>
@@ -68,9 +76,9 @@ export default {
       bookName: "",
       bookAuthor: "",
       button: "fa fa-plus",
-      deployAddBook: false,
+      deployForm: false,
       update: false,
-      sus: ""
+      bookId: ""
     }
   },
   methods: {
@@ -83,28 +91,38 @@ export default {
         this.books = docs
       })
     },
-    handleDeployAddBook: function(event) {
+    handleDeployForm: function(event) {
       if(event.target.id === "agregar") {
-        this.deployAddBook = true
+        this.deployForm = true
         this.button = "fa fa-minus"
         document.getElementById('agregar').setAttribute('id', 'actualizar')
       } else if (event.target.id === "actualizar") {
-        this.deployAddBook = false
+        this.deployForm = false
         this.button = "fa fa-plus"
         document.getElementById('actualizar').setAttribute('id', 'agregar')
         this.update = false
       }
     },
     handleBookForm(event) {
-      if(event.target.id === "agregar") {
-        const dataBook = {
+      if(event.target.id === "add") {
+        const bookData = {
           nombre: this.bookName,
           autor: this.bookAuthor
         }
-        this.addBook(dataBook)
+        this.addBook(bookData)
         this.bookName = ""
         this.bookAuthor = ""
+        this.deployForm = false
+        this.button = "fa fa-plus"
+        //document.getElementById("update").setAttribute("id", "add");
         console.log(this.books)
+      }
+      else if(event.target.id === "update") {
+        this.update = true;
+        this.deployForm = false
+        this.button = "fa fa-plus"
+        this.updateBook()
+        //document.getElementById("add").setAttribute("id", "update");
       }
     },
     async addBook(book) {
@@ -112,6 +130,9 @@ export default {
       let autor = book.autor
       const librosCollection = collection(this.db, "libros")
       await addDoc(librosCollection, { nombre, autor })
+    },
+    async updateBook() {
+      console.log("updating")
     }
   },
   beforeMount() {
@@ -125,6 +146,7 @@ export default {
     };
     const app = initializeApp(firebaseConfig); // Initialize Firebase
     this.db = getFirestore(app); // Initialize Firestore
+    console.log(this.db)
     this.loadBooks()
   },
 }
