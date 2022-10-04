@@ -23,16 +23,17 @@
         </div>
         <div class="col-md-2 col-sm-12 my-auto">
           <div
-            id='add'
-            class="btn btn-info"
-            @click="handleBookForm($event)"
-          >Agregar</div>
-          <div
             v-if='update'
             id='update'
             class="btn btn-secondary"
             @click="handleBookForm($event)"
           >Actualizar</div>
+          <div
+            v-else
+            id='add'
+            class="btn btn-info"
+            @click="handleBookForm($event)"
+          >Agregar</div>
         </div>
       </div>
     </div>
@@ -52,7 +53,7 @@
         :id="book.id"
         :index="index"
         :db="this.db"
-        @handleUpdate="handleUpdate($event)"
+        @updateBook="updateBook($event)"
       ></BookComponent>
     </div>
   </div>
@@ -62,7 +63,7 @@
 <script>
 import { initializeApp } from "firebase/app"
 import BookComponent from './components/BookComponent.vue'
-import { getFirestore, collection, addDoc, onSnapshot } from "firebase/firestore";
+import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc } from "firebase/firestore";
 
 export default {
   name: 'App',
@@ -118,21 +119,35 @@ export default {
         console.log(this.books)
       }
       else if(event.target.id === "update") {
-        this.update = true;
+        //this.updateBook()
+        //document.getElementById("add").setAttribute("id", "update");
+        const bookData = {
+          nombre: this.bookName,
+          autor: this.bookAuthor
+        }
+        console.log(bookData)
+        updateDoc(doc(this.db, 'libros', this.bookId), bookData)
+        this.update = false;
         this.deployForm = false
         this.button = "fa fa-plus"
-        this.updateBook()
-        //document.getElementById("add").setAttribute("id", "update");
+        this.bookName = ""
+        this.bookAuthor = ""
       }
     },
     async addBook(book) {
       let nombre = book.nombre
       let autor = book.autor
-      const librosCollection = collection(this.db, "libros")
-      await addDoc(librosCollection, { nombre, autor })
+      await addDoc(collection(this.db, "libros"), {nombre, autor})
     },
-    async updateBook() {
-      console.log("updating")
+    async updateBook(book) {
+      console.log(book)
+      this.deployForm = true
+      this.update = true
+      this.bookAuthor = book.autor
+      this.bookName = book.nombre
+      this.bookId = book.id
+      this.button = "fa fa-minus"
+      console.log(this.bookId)
     }
   },
   beforeMount() {
